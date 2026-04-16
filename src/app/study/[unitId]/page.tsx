@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { useKanjiData, KanjiCard } from "@/lib/hooks/useKanjiData";
 import { useParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { ArrowLeft, ChevronLeft, ChevronRight, Shuffle, RotateCcw } from "lucide-react";
+import { ArrowLeft, ChevronLeft, ChevronRight, Shuffle, RotateCcw, List } from "lucide-react";
 
 export default function StudyPage() {
     const params = useParams();
@@ -85,33 +85,74 @@ export default function StudyPage() {
                 </button>
             </div>
 
-            <div className="relative w-full min-h-[60vh] sm:min-h-0 sm:aspect-[4/3] md:aspect-[3/2] cursor-pointer perspective-1000 group mx-auto mt-4" onClick={() => setIsFlipped(!isFlipped)}>
+            <div
+                className="relative w-full min-h-[60vh] sm:min-h-[500px] cursor-pointer perspective-1000 group mx-auto mt-4"
+                onClick={() => setIsFlipped(!isFlipped)}
+            >
                 <motion.div
                     className="w-full h-full relative preserve-3d transition-shadow hover:shadow-xl rounded-3xl"
                     animate={{ rotateY: isFlipped ? 180 : 0 }}
                     transition={{ duration: 0.6, type: "spring", stiffness: 260, damping: 20 }}
                 >
-                    {/* Front Face */}
-                    <div className="absolute w-full h-full glass-panel rounded-3xl flex flex-col items-center justify-center p-8 shadow-2xl backface-hidden bg-white dark:bg-slate-800 border dark:border-slate-700 border-slate-200">
-                        <span className="text-blue-400/60 dark:text-blue-500/40 absolute top-6 right-6 flex items-center gap-2 font-bold uppercase text-xs tracking-wider opacity-0 group-hover:opacity-100 transition-opacity"><RotateCcw className="w-4 h-4" /> Tap to flip</span>
-                        <h2 className="text-6xl sm:text-8xl md:text-[140px] leading-tight text-center font-black font-jp text-slate-900 dark:text-white drop-shadow-sm select-none px-4 break-words">
-                            {currentCard.kanji}
-                        </h2>
-                    </div>
+                    {/* Front Face: MAIN KANJI & MEANING */}
+                    <div className="absolute w-full h-full glass-panel rounded-3xl flex flex-col items-center justify-center p-6 sm:p-12 shadow-2xl backface-hidden bg-white dark:bg-slate-800 border dark:border-slate-700 border-slate-200">
+                        <span className="text-blue-400/60 dark:text-blue-500/40 absolute top-6 right-6 flex items-center gap-2 font-bold uppercase text-xs tracking-wider opacity-0 group-hover:opacity-100 transition-opacity">
+                            <RotateCcw className="w-4 h-4" /> Tap to flip
+                        </span>
 
-                    {/* Back Face */}
-                    <div className="absolute w-full h-full glass-panel rounded-3xl flex flex-col items-center justify-center p-8 shadow-2xl backface-hidden bg-blue-50 dark:bg-slate-800 border-2 border-blue-200 dark:border-blue-900/50" style={{ transform: "rotateY(180deg)" }}>
-                        <div className="space-y-8 text-center px-4 w-full select-none">
-                            <div className="bg-white/50 dark:bg-slate-900/50 p-4 sm:p-6 rounded-2xl w-full">
-                                <p className="text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1 sm:mb-2">Meaning</p>
-                                <h3 className="text-2xl sm:text-3xl md:text-5xl text-slate-900 dark:text-white font-extrabold break-words">{currentCard.meaning}</h3>
-                            </div>
-                            <div className="bg-indigo-50/50 dark:bg-indigo-900/20 p-4 sm:p-6 rounded-2xl w-full">
-                                <p className="text-xs font-black text-indigo-400/70 dark:text-indigo-500 uppercase tracking-widest mb-1 sm:mb-2">Burmese</p>
-                                <h3 className="text-xl sm:text-2xl md:text-4xl text-indigo-700 dark:text-indigo-400 font-extrabold leading-tight break-words">{currentCard.burmese}</h3>
+                        <div className="flex flex-col items-center justify-center h-full space-y-8">
+                            <h2 className="text-[120px] sm:text-[140px] md:text-[160px] leading-none text-center font-black font-jp text-slate-900 dark:text-white drop-shadow-sm select-none break-words">
+                                {currentCard.kanji}
+                            </h2>
+                            <div className="bg-indigo-50 dark:bg-indigo-900/20 px-8 py-4 rounded-2xl border border-indigo-100 dark:border-indigo-800/30">
+                                <h3 className="text-3xl sm:text-4xl text-indigo-700 dark:text-indigo-400 font-extrabold text-center select-none">
+                                    {currentCard.mainMeaning}
+                                </h3>
                             </div>
                         </div>
-                        <span className="text-blue-400/60 dark:text-blue-500/40 absolute bottom-6 right-6 flex items-center gap-2 font-bold uppercase text-xs tracking-wider opacity-0 group-hover:opacity-100 transition-opacity"><RotateCcw className="w-4 h-4" /> Tap to flip back</span>
+                    </div>
+
+                    {/* Back Face: COMBINATIONS */}
+                    <div className="absolute w-full h-full glass-panel rounded-3xl flex flex-col items-center pt-8 pb-4 px-4 sm:px-8 shadow-2xl backface-hidden bg-blue-50 dark:bg-slate-800 border-2 border-blue-200 dark:border-blue-900/50" style={{ transform: "rotateY(180deg)" }}>
+                        <div className="flex items-center gap-3 w-full border-b border-blue-200 dark:border-slate-700 pb-4 mb-4 select-none px-4">
+                            <List className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                            <h3 className="text-2xl font-black text-slate-800 dark:text-white">Combinations</h3>
+                        </div>
+
+                        {/* Scrollable container for combinations. stopPropagation ensures dragging/scrolling on mobile doesn't accidentally flip the card instantly */}
+                        <div
+                            className="w-full flex-1 overflow-y-auto pr-2 space-y-3 scrollbar-thin scrollbar-thumb-blue-300 dark:scrollbar-thumb-slate-600"
+                            onClick={(e) => {
+                                // Allow scrolling without flipping, but let clicks pass through if preferred.
+                                // We stop propagation so taping a combination doesn't flip back instantly
+                                e.stopPropagation();
+                            }}
+                        >
+                            {currentCard.combinations && currentCard.combinations.length > 0 ? (
+                                currentCard.combinations.map((comb) => (
+                                    <div key={comb.id} className="bg-white/80 dark:bg-slate-900/80 p-4 sm:p-5 rounded-xl border border-blue-100 dark:border-slate-700 flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-6 shadow-sm">
+                                        <div className="text-3xl font-black font-jp tracking-wider text-slate-900 dark:text-white select-text">
+                                            {comb.word}
+                                        </div>
+                                        <div className="text-lg font-bold text-indigo-600 dark:text-indigo-400 text-left sm:text-right select-text">
+                                            {comb.meaning}
+                                        </div>
+                                    </div>
+                                ))
+                            ) : (
+                                <div className="h-full flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 italic">
+                                    No combinations added.
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Explicit button at the bottom to flip back since we stopped propagation on the scroll area */}
+                        <button
+                            onClick={(e) => { e.stopPropagation(); setIsFlipped(false); }}
+                            className="w-full mt-4 py-3 bg-blue-100 dark:bg-blue-900/40 hover:bg-blue-200 dark:hover:bg-blue-800/50 text-blue-800 dark:text-blue-300 rounded-xl font-bold flex items-center justify-center gap-2 transition"
+                        >
+                            <RotateCcw className="w-5 h-5" /> Flip Back
+                        </button>
                     </div>
                 </motion.div>
             </div>

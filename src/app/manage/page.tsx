@@ -1,34 +1,65 @@
 "use client";
 import React, { useState, useRef } from "react";
-import { useKanjiData } from "@/lib/hooks/useKanjiData";
-import { Save, Download, Upload, Trash2, PlusCircle, AlertCircle, Database } from "lucide-react";
+import { useKanjiData, KanjiCombination } from "@/lib/hooks/useKanjiData";
+import { Save, Download, Upload, Trash2, PlusCircle, AlertCircle, Database, Plus, X } from "lucide-react";
 
 export default function ManagePage() {
     const { data, isLoaded, addCard, deleteCard, importData, clearAllData } = useKanjiData();
 
     const [form, setForm] = useState({
+        unit: 1,
         kanji: "",
-        meaning: "",
-        burmese: "",
-        unit: 1
+        mainMeaning: "",
+        combinations: [{ id: crypto.randomUUID(), word: "", meaning: "" }] as KanjiCombination[]
     });
 
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     if (!isLoaded) return <div className="p-8 text-center animate-pulse">Loading...</div>;
 
+    const handleAddCombination = () => {
+        setForm(prev => ({
+            ...prev,
+            combinations: [...prev.combinations, { id: crypto.randomUUID(), word: "", meaning: "" }]
+        }));
+    };
+
+    const handleRemoveCombination = (id: string) => {
+        setForm(prev => ({
+            ...prev,
+            combinations: prev.combinations.filter(c => c.id !== id)
+        }));
+    };
+
+    const handleCombinationChange = (id: string, field: "word" | "meaning", value: string) => {
+        setForm(prev => ({
+            ...prev,
+            combinations: prev.combinations.map(c =>
+                c.id === id ? { ...c, [field]: value } : c
+            )
+        }));
+    };
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        if (!form.kanji.trim() || !form.meaning.trim() || !form.burmese.trim()) return;
+        if (!form.kanji.trim() || !form.mainMeaning.trim()) return;
 
-        addCard(form);
+        // Filter out completely empty combinations before saving
+        const validCombinations = form.combinations.filter(c => c.word.trim() || c.meaning.trim());
 
-        // Reset kanji and meaning, keeping the same unit to make bulk entry faster
+        addCard({
+            unit: form.unit,
+            kanji: form.kanji,
+            mainMeaning: form.mainMeaning,
+            combinations: validCombinations
+        });
+
+        // Reset form, keeping the same unit
         setForm(prev => ({
             ...prev,
             kanji: "",
-            meaning: "",
-            burmese: ""
+            mainMeaning: "",
+            combinations: [{ id: crypto.randomUUID(), word: "", meaning: "" }]
         }));
     };
 
@@ -71,7 +102,7 @@ export default function ManagePage() {
                         <Database className="w-8 h-8 text-blue-600" />
                         Manage Data
                     </h1>
-                    <p className="text-slate-500 mt-1">Add, backup, and organize your Kanji vocabulary.</p>
+                    <p className="text-slate-500 mt-1">Add kanji cards and their combinations.</p>
                 </div>
                 <div className="flex gap-3 w-full sm:w-auto">
                     <button onClick={handleExport} className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-slate-800 dark:bg-slate-700 text-white rounded-lg hover:bg-slate-700 dark:hover:bg-slate-600 transition font-medium text-sm">
@@ -92,7 +123,7 @@ export default function ManagePage() {
                         <h2 className="text-xl font-bold">Add New Card</h2>
                     </div>
 
-                    <form onSubmit={handleSubmit} className="space-y-5">
+                    <form onSubmit={handleSubmit} className="space-y-6">
                         <div>
                             <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">Unit Assignment</label>
                             <select
@@ -106,40 +137,68 @@ export default function ManagePage() {
                             </select>
                         </div>
 
-                        <div>
-                            <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">Kanji / Word</label>
-                            <input
-                                required
-                                type="text"
-                                placeholder="e.g. 会社"
-                                value={form.kanji}
-                                onChange={(e) => setForm({ ...form, kanji: e.target.value })}
-                                className="w-full bg-slate-50 dark:bg-slate-900 border dark:border-slate-700 rounded-xl p-3 outline-none focus:ring-2 focus:ring-blue-500 transition text-2xl font-jp"
-                            />
+                        <div className="bg-blue-50 dark:bg-slate-800/50 p-4 rounded-xl border border-blue-100 dark:border-slate-700 space-y-4">
+                            <h3 className="text-sm font-bold text-blue-800 dark:text-blue-300 uppercase tracking-widest">Main Kanji</h3>
+                            <div>
+                                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">Kanji Character</label>
+                                <input
+                                    required
+                                    type="text"
+                                    placeholder="e.g. 会"
+                                    value={form.kanji}
+                                    onChange={(e) => setForm({ ...form, kanji: e.target.value })}
+                                    className="w-full bg-white dark:bg-slate-900 border dark:border-slate-700 rounded-xl p-3 outline-none focus:ring-2 focus:ring-blue-500 transition text-2xl font-jp"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">Burmese Meaning</label>
+                                <input
+                                    required
+                                    type="text"
+                                    placeholder="e.g. တွေ့ဆုံခြင်း"
+                                    value={form.mainMeaning}
+                                    onChange={(e) => setForm({ ...form, mainMeaning: e.target.value })}
+                                    className="w-full bg-white dark:bg-slate-900 border dark:border-slate-700 rounded-xl p-3 outline-none focus:ring-2 focus:ring-blue-500 transition"
+                                />
+                            </div>
                         </div>
 
-                        <div>
-                            <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">Original Meaning (English)</label>
-                            <input
-                                required
-                                type="text"
-                                placeholder="Company"
-                                value={form.meaning}
-                                onChange={(e) => setForm({ ...form, meaning: e.target.value })}
-                                className="w-full bg-slate-50 dark:bg-slate-900 border dark:border-slate-700 rounded-xl p-3 outline-none focus:ring-2 focus:ring-blue-500 transition"
-                            />
-                        </div>
+                        <div className="space-y-4">
+                            <div className="flex items-center justify-between">
+                                <h3 className="text-sm font-bold text-slate-500 uppercase tracking-widest">Combinations</h3>
+                                <button type="button" onClick={handleAddCombination} className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 flex items-center gap-1 text-sm font-bold transition">
+                                    <Plus className="w-4 h-4" /> Add Row
+                                </button>
+                            </div>
 
-                        <div>
-                            <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">Burmese Translation</label>
-                            <input
-                                required
-                                type="text"
-                                placeholder="e.g. ကုမ္ပဏီ"
-                                value={form.burmese}
-                                onChange={(e) => setForm({ ...form, burmese: e.target.value })}
-                                className="w-full bg-slate-50 dark:bg-slate-900 border dark:border-slate-700 rounded-xl p-3 outline-none focus:ring-2 focus:ring-blue-500 transition"
-                            />
+                            {form.combinations.map((c, index) => (
+                                <div key={c.id} className="flex flex-col sm:flex-row items-center gap-2 bg-slate-50 dark:bg-slate-800/30 p-2 sm:p-0 sm:bg-transparent sm:dark:bg-transparent rounded-lg sm:rounded-none">
+                                    <span className="hidden sm:inline font-bold text-slate-400 w-6 text-center">{index + 1}.</span>
+                                    <input
+                                        type="text"
+                                        placeholder="Word (e.g. 会社)"
+                                        value={c.word}
+                                        onChange={(e) => handleCombinationChange(c.id, "word", e.target.value)}
+                                        className="flex-1 w-full bg-white dark:bg-slate-900 border dark:border-slate-700 rounded-lg p-2 outline-none focus:ring-2 focus:ring-blue-500 transition font-jp text-lg"
+                                    />
+                                    <input
+                                        type="text"
+                                        placeholder="Meaning (e.g. ကုမ္ပဏီ)"
+                                        value={c.meaning}
+                                        onChange={(e) => handleCombinationChange(c.id, "meaning", e.target.value)}
+                                        className="flex-1 w-full bg-white dark:bg-slate-900 border dark:border-slate-700 rounded-lg p-2 outline-none focus:ring-2 focus:ring-blue-500 transition"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => handleRemoveCombination(c.id)}
+                                        disabled={form.combinations.length === 1}
+                                        className="p-2 text-slate-400 hover:text-red-500 disabled:opacity-30 disabled:hover:text-slate-400 transition ml-auto sm:ml-0"
+                                    >
+                                        <X className="w-5 h-5" />
+                                    </button>
+                                </div>
+                            ))}
                         </div>
 
                         <button type="submit" className="w-full flex justify-center items-center gap-2 py-4 mt-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl font-bold transition-all shadow-lg shadow-blue-500/30 hover:shadow-blue-500/40 active:scale-[0.98]">
@@ -174,19 +233,22 @@ export default function ManagePage() {
                             [...data].reverse().map(card => (
                                 <div key={card.id} className="group relative flex justify-between items-center p-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700/50 hover:border-blue-300 dark:hover:border-blue-500/30 hover:shadow-lg transition-all dark:shadow-none">
                                     <div className="flex-1 pr-4">
-                                        <div className="flex items-center gap-3 mb-1.5">
-                                            <span className="text-xs font-black text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded-md border border-blue-100 dark:border-blue-800/30">
-                                                U{card.unit}
-                                            </span>
-                                            <span className="font-extrabold text-xl font-jp tracking-wider text-slate-900 dark:text-white">
-                                                {card.kanji}
-                                            </span>
+                                        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mb-2">
+                                            <div className="flex items-center gap-3">
+                                                <span className="text-xs font-black text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded-md border border-blue-100 dark:border-blue-800/30">
+                                                    U{card.unit}
+                                                </span>
+                                                <span className="font-extrabold text-2xl font-jp tracking-wider text-slate-900 dark:text-white">
+                                                    {card.kanji}
+                                                </span>
+                                            </div>
+                                            <span className="text-sm font-bold text-slate-600 dark:text-slate-300 border-l-0 sm:border-l-2 border-slate-200 dark:border-slate-700 pl-0 sm:pl-4">{card.mainMeaning}</span>
                                         </div>
-                                        <div className="text-sm font-medium text-slate-600 dark:text-slate-300 flex items-center gap-2">
-                                            <span>{card.meaning}</span>
-                                            <span className="text-slate-300 dark:text-slate-600">&bull;</span>
-                                            <span className="text-indigo-600 dark:text-indigo-400">{card.burmese}</span>
-                                        </div>
+                                        {card.combinations && card.combinations.length > 0 && (
+                                            <div className="text-xs font-bold text-indigo-500 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 inline-block px-2 py-1 rounded">
+                                                {card.combinations.length} Combination{card.combinations.length > 1 ? 's' : ''}
+                                            </div>
+                                        )}
                                     </div>
                                     <button
                                         onClick={() => deleteCard(card.id)}
