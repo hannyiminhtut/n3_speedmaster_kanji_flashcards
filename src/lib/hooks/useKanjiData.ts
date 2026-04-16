@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 export type KanjiCombination = {
     id: string;
     word: string;
+    pronunciation?: string;
     meaning: string;
 };
 

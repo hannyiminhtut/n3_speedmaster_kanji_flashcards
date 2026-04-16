@@ -10,7 +10,7 @@ export default function ManagePage() {
         unit: 1,
         kanji: "",
         mainMeaning: "",
-        combinations: [{ id: crypto.randomUUID(), word: "", meaning: "" }] as KanjiCombination[]
+        combinations: [{ id: crypto.randomUUID(), word: "", pronunciation: "", meaning: "" }] as KanjiCombination[]
     });
 
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -20,7 +20,7 @@ export default function ManagePage() {
     const handleAddCombination = () => {
         setForm(prev => ({
             ...prev,
-            combinations: [...prev.combinations, { id: crypto.randomUUID(), word: "", meaning: "" }]
+            combinations: [...prev.combinations, { id: crypto.randomUUID(), word: "", pronunciation: "", meaning: "" }]
         }));
     };
 
@@ -31,7 +31,7 @@ export default function ManagePage() {
         }));
     };
 
-    const handleCombinationChange = (id: string, field: "word" | "meaning", value: string) => {
+    const handleCombinationChange = (id: string, field: "word" | "pronunciation" | "meaning", value: string) => {
         setForm(prev => ({
             ...prev,
             combinations: prev.combinations.map(c =>
@@ -59,7 +59,7 @@ export default function ManagePage() {
             ...prev,
             kanji: "",
             mainMeaning: "",
-            combinations: [{ id: crypto.randomUUID(), word: "", meaning: "" }]
+            combinations: [{ id: crypto.randomUUID(), word: "", pronunciation: "", meaning: "" }]
         }));
     };
 
@@ -108,7 +108,7 @@ export default function ManagePage() {
                     <button onClick={handleExport} className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-slate-800 dark:bg-slate-700 text-white rounded-lg hover:bg-slate-700 dark:hover:bg-slate-600 transition font-medium text-sm">
                         <Download className="w-4 h-4" /> Export JSON
                     </button>
-                    <label className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 border dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 cursor-pointer transition font-medium text-sm">
+                    <label className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 border dark:border-slate-700 rounded-lg hover:bg-white dark:hover:bg-slate-700 cursor-pointer transition font-medium text-sm">
                         <Upload className="w-4 h-4" /> Import JSON
                         <input type="file" accept=".json" className="hidden" ref={fileInputRef} onChange={handleImport} />
                     </label>
@@ -180,14 +180,21 @@ export default function ManagePage() {
                                         placeholder="Word (e.g. 会社)"
                                         value={c.word}
                                         onChange={(e) => handleCombinationChange(c.id, "word", e.target.value)}
-                                        className="flex-1 w-full bg-white dark:bg-slate-900 border dark:border-slate-700 rounded-lg p-2 outline-none focus:ring-2 focus:ring-blue-500 transition font-jp text-lg"
+                                        className="flex-1 w-full bg-white dark:bg-slate-900 border dark:border-slate-700 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-blue-500 transition font-jp text-base"
+                                    />
+                                    <input
+                                        type="text"
+                                        placeholder="Ruby/Pronunc. (e.g. かいしゃ)"
+                                        value={c.pronunciation || ""}
+                                        onChange={(e) => handleCombinationChange(c.id, "pronunciation", e.target.value)}
+                                        className="flex-1 w-full bg-white dark:bg-slate-900 border dark:border-slate-700 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-blue-500 transition font-jp text-[15px]"
                                     />
                                     <input
                                         type="text"
                                         placeholder="Meaning (e.g. ကုမ္ပဏီ)"
                                         value={c.meaning}
                                         onChange={(e) => handleCombinationChange(c.id, "meaning", e.target.value)}
-                                        className="flex-1 w-full bg-white dark:bg-slate-900 border dark:border-slate-700 rounded-lg p-2 outline-none focus:ring-2 focus:ring-blue-500 transition"
+                                        className="flex-1 w-full bg-white dark:bg-slate-900 border dark:border-slate-700 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-blue-500 transition text-[15px]"
                                     />
                                     <button
                                         type="button"

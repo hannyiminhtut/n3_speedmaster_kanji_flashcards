@@ -153,10 +153,17 @@ export default function StudyPage() {
                             {currentCard.combinations && currentCard.combinations.length > 0 ? (
                                 currentCard.combinations.map((comb) => (
                                     <div key={comb.id} className="bg-white dark:bg-slate-900 p-3.5 sm:p-5 rounded-2xl border border-slate-200/60 dark:border-slate-700 flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 sm:gap-4 shadow-sm relative overflow-hidden">
-                                        <div className="text-2xl sm:text-3xl font-black font-jp tracking-wide text-slate-900 dark:text-white select-text z-10 w-full sm:w-auto">
-                                            {comb.word}
+                                        <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-4 z-10 w-full sm:w-auto">
+                                            <div className="text-2xl sm:text-3xl font-black font-jp tracking-wide text-slate-900 dark:text-white select-text w-full sm:w-auto">
+                                                {comb.word}
+                                            </div>
+                                            {comb.pronunciation && (
+                                                <div className="text-sm sm:text-base font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-lg font-jp inline-block w-fit whitespace-nowrap">
+                                                    {comb.pronunciation}
+                                                </div>
+                                            )}
                                         </div>
-                                        <div className="text-[15px] sm:text-lg font-bold text-indigo-600 dark:text-indigo-400 text-left sm:text-right select-text z-10 break-words flex-1">
+                                        <div className="text-[16px] sm:text-lg font-bold text-indigo-600 dark:text-indigo-400 text-left sm:text-right select-text z-10 break-words flex-1 mt-1 sm:mt-0">
                                             {comb.meaning}
                                         </div>
                                     </div>
